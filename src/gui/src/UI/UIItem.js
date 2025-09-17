@@ -162,6 +162,8 @@ function UIItem(options){
 
         h += `</div>`;
 
+        // divider
+        h += `<div class="item-divider"></div>`;
         // name
         h += `<pre class="item-name" data-item-id="${item_id}" title="${html_encode(options.name)}">${options.is_trash ? i18n('trash') : html_encode(truncate_filename(options.name))}</pre>`
         // name editor
@@ -279,8 +281,21 @@ function UIItem(options){
             // reset longer hover timeout and last window dragged over
             longer_hover_timeout = null;
             last_window_dragged_over = null;
+
+            window.an_item_is_being_dragged = true;
+            $('.toolbar').css('pointer-events', 'none');
         },
         drag: function(event, ui) {     
+            // Constrain item within desktop bounds
+            const minLeft = -50;
+            const maxLeft = window.desktop_width - 50;
+            const minTop = window.toolbar_height;
+            const maxTop = window.desktop_height + window.toolbar_height;
+            
+            // Apply constraints to ui.position
+            ui.position.left = Math.max(minLeft, Math.min(maxLeft, ui.position.left));
+            ui.position.top = Math.max(minTop, Math.min(maxTop, ui.position.top));
+            
             // Only show drag helpers if the item has been moved more than 5px
             if( Math.abs(ui.originalPosition.top - ui.offset.top) > 5
             ||
@@ -301,9 +316,13 @@ function UIItem(options){
 
             // Move other selected items
             for(let i=0; i < item_count - 1; i++){
+                // Apply same constraints to cloned items with their offset
+                const cloneLeft = Math.max(minLeft, Math.min(maxLeft, ui.position.left + 3 * (i+1)));
+                const cloneTop = Math.max(minTop, Math.min(maxTop, ui.position.top + 3 * (i+1)));
+                
                 $(other_selected_items[i]).css({
-                    'left': ui.position.left + 3 * (i+1),
-                    'top': ui.position.top + 3 * (i+1),
+                    'left': cloneLeft,
+                    'top': cloneTop,
                     'z-index': 999 - (i),
                     'opacity': 0.5 - i*0.1,
                 })
@@ -373,6 +392,8 @@ function UIItem(options){
             // reset longer hover timeout and last window dragged over
             clearTimeout(longer_hover_timeout);
             last_window_dragged_over = null;
+            window.an_item_is_being_dragged = false;
+            $('.toolbar').css('pointer-events', 'auto');
         }
     });
 
@@ -1429,8 +1450,8 @@ function UIItem(options){
         if(val !== ''){
             const w = $('.item-name-shadow').width();
             const h = $('.item-name-shadow').height();
-            $(el_item_name_editor).width(w + 4)
-            $(el_item_name_editor).height(h + 2)
+            $(el_item_name_editor).width(w)
+            $(el_item_name_editor).height(h)
         }
     })
 

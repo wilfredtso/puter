@@ -84,6 +84,8 @@ module.exports = eggspress(['/signup'], {
 
 
     // cloudflare turnstile validation
+    //
+    // ref: https://developers.cloudflare.com/turnstile/get-started/server-side-validation/
     if (config.services?.['cloudflare-turnstile']?.enabled) {
         const formData = new FormData();
         formData.append('secret', config.services?.['cloudflare-turnstile']?.secret_key);
@@ -341,7 +343,7 @@ module.exports = eggspress(['/signup'], {
                 // uuid
                 user_uuid,
                 // email_confirm_code
-                email_confirm_code,
+                '' + email_confirm_code,
                 // email_confirm_token
                 email_confirm_token,
                 // email_confirmed

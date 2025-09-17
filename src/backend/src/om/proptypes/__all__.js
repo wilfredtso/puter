@@ -24,6 +24,7 @@ const { Context } = require("../../util/context");
 const { is_valid_path } = require("../../filesystem/validation");
 const FSNodeContext = require("../../filesystem/FSNodeContext");
 const { Entity } = require("../entitystorage/Entity");
+const NULL = Symbol("NULL")
 
 class OMTypeError extends Error {
     constructor ({ expected, got }) {
@@ -43,13 +44,19 @@ module.exports = {
         from: 'base',
     },
     string: {
-        from: 'base',
+        is_set (value) {
+            return (!!value) || value === null 
+        },
         async adapt (value) {
             if ( value === undefined ) return '';
 
             // SQL stores strings as null. If one-way adapt from db is supported
             // then this should become an sql-to-entity adapt only.
             if ( value === null ) return '';
+
+            if (value === NULL) {
+                return null;
+            }
 
             if ( typeof value !== 'string' ) {
                 throw new OMTypeError({ expected: 'string', got: typeof value });
@@ -172,7 +179,6 @@ module.exports = {
             if ( ! value ) return null;
             if ( value instanceof Entity ) return value;
             const svc = Context.get().get('services').get(descriptor.service);
-            console.log('VALUE BEING READ', value);
             const entity = await svc.read(value);
             return entity;
         }
@@ -260,4 +266,5 @@ module.exports = {
             }
         }
     },
+    NULL
 };
